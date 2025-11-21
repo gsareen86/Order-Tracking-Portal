@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - UFlex Order Tracking</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="dashboard-body">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>UFlex Portal</h2>
+            </div>
+            <nav class="nav-links">
+                <a href="#" class="active"><i class="fas fa-box"></i> Orders</a>
+                <a href="#"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="#"><i class="fas fa-file-invoice"></i> Invoices</a>
+                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">JD</div>
+                <div class="info">
+                    <h4>John Doe</h4>
+                    <p>XYZ Industries</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Order Dashboard</h1>
+                <div class="actions">
+                    <button class="btn-secondary" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+                    <button class="btn-secondary" id="getHelpBtn"><i class="fas fa-headset"></i> Get Help</button>
+                    <button class="btn-secondary" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </header>
+
+            <div id="notificationBanner" class="notification-banner" style="display: none;">
+                <span id="notificationMessage"></span>
+                <button class="close-banner">&times;</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon-box blue"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="stat-info">
+                        <h3>Total Orders</h3>
+                        <p id="totalOrders">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box orange"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <h3>Pending</h3>
+                        <p id="pendingOrders">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box green"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-info">
+                        <h3>Delivered</h3>
+                        <p id="deliveredOrders">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box purple"><i class="fas fa-rupee-sign"></i></div>
+                    <div class="stat-info">
+                        <h3>Total Spend</h3>
+                        <p id="totalSpend">?0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <select id="dateFilter">
+                        <option value="all">All Time</option>
+                        <option value="15">Last 15 Days</option>
+                        <option value="60">Last 60 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="180">Last 6 Months</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Order Type</label>
+                    <select id="typeFilter">
+                        <option value="all">All Types</option>
+                        <option value="Packaging Films">Packaging Films</option>
+                        <option value="Aseptic Liquid Packaging">Aseptic Liquid Packaging</option>
+                        <option value="Chemicals">Chemicals</option>
+                        <option value="Holography">Holography</option>
+                        <option value="Engineering Machinery">Engineering Machinery</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="statusFilter">
+                        <option value="all">All Statuses</option>
+                        <option value="Ordered">Ordered</option>
+                        <option value="Packaging">Packaging</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort By</label>
+                    <select id="sortFilter">
+                        <option value="date_desc">Date (Newest)</option>
+                        <option value="date_asc">Date (Oldest)</option>
+                        <option value="amount_desc">Amount (High to Low)</option>
+                        <option value="amount_asc">Amount (Low to High)</option>
+                        <option value="orderno_asc">Order No (Asc)</option>
+                        <option value="orderno_desc">Order No (Desc)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order No</th>
+                            <th>Date</th>
+                            <th>Item</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                            <th>Expected Delivery</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Order Details</h2>
+            <div id="modalDetailsContent"></div>
+        </div>
+    </div>
+
+    <div id="trackingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Shipment Tracking</h2>
+            <div id="trackingTimeline" class="timeline"></div>
+        </div>
+    </div>
+
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Cancel Order</h2>
+            <p>Are you sure you want to cancel this order?</p>
+            <form id="cancelForm">
+                <input type="hidden" id="cancelOrderId">
+                <div class="form-group">
+                    <label>Reason for Cancellation</label>
+                    <textarea id="cancelReason" required placeholder="Please tell us why..."></textarea>
+                </div>
+                <button type="submit" class="btn-danger">Confirm Cancellation</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Get Help</h2>
+            <div class="help-options">
+                <p>Need assistance? Our AI assistant is here to help you with your orders.</p>
+                <button class="btn-primary" id="startChatFromHelp"><i class="fas fa-comments"></i> Start Live Chat</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chatWidget" class="chat-widget">
+        <button id="chatToggleBtn" class="chat-toggle-btn">
+            <i class="fas fa-robot"></i>
+        </button>
+        <div id="chatWindow" class="chat-window" style="display: none;">
+            <div class="chat-header">
+                <h3><i class="fas fa-robot"></i> AI Assistant</h3>
+                <button id="closeChatBtn" class="close-chat-btn">&times;</button>
+            </div>
+            <div id="chatMessages" class="chat-messages">
+                <div class="message ai-message">
+                    Hello! I'm your AI assistant. Ask me about your orders or general stats.
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type your query...">
+                <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
