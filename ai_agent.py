@@ -6,9 +6,13 @@ import os
 import json
 import re
 import traceback
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configure API Key
-API_KEY = "AIzaSyBO_Db5suSzplqp05aiR0atLWe2OU8JKjw" # Replace with your secure key handling
+API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=API_KEY)
 
 class DataAgent:
