@@ -1,3 +1,5 @@
+### AI chatbot code that uses Google Gemini-3-Pro to understand user query and extract data from database to answer the question
+
 import google.generativeai as genai
 import pandas as pd
 import os
