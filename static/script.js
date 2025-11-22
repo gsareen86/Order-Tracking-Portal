@@ -36,16 +36,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- HELPERS ---
+    function formatIndianCurrency(amount) {
+        const x = amount.toString();
+        const lastThree = x.substring(x.length - 3);
+        const otherNumbers = x.substring(0, x.length - 3);
+        if (otherNumbers !== '')
+            return '₹' + otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
+        return '₹' + lastThree;
+    }
+
     // --- DASHBOARD LOGIC ---
     const ordersTableBody = document.getElementById('ordersTableBody');
     if (ordersTableBody) {
-        // 2. AUTH GUARD: If no session token, kick user back to login (index.html)
+        // AUTHENTICATION GUARD: Redirect to login if not authenticated
         if (!localStorage.getItem('flex_user_session')) {
             window.location.href = '/index.html';
             return; // Stop executing dashboard logic
         }
 
+
         let allOrders = [];
+        let charts = {}; // Store chart instances
 
         // Fetch Orders
         fetchOrders();
@@ -61,16 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch('/api/orders');
                 const data = await response.json();
                 allOrders = data.orders;
-
-                // Update stats
-                document.getElementById('totalOrders').textContent = allOrders.length;
-                document.getElementById('pendingOrders').textContent =
-                    allOrders.filter(o => ['Ordered', 'Packaging', 'Shipped'].includes(o['Order Status'])).length;
-                document.getElementById('deliveredOrders').textContent =
-                    allOrders.filter(o => o['Order Status'] === 'Delivered').length;
-
-                const totalSpend = allOrders.reduce((sum, o) => sum + o['Total Amount'], 0);
-                document.getElementById('totalSpend').textContent = `₹${totalSpend.toLocaleString()}`;
 
                 filterAndRender();
             } catch (error) {
@@ -122,29 +124,269 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            // Update Stats
+            updateStats(filtered);
+
+            // Render Table
             renderTable(filtered);
+
+            // Render Charts
+            renderCharts(filtered);
+        }
+
+        function updateStats(orders) {
+            document.getElementById('totalOrders').textContent = orders.length;
+            document.getElementById('pendingOrders').textContent =
+                orders.filter(o => ['Ordered', 'Packaging', 'Shipped'].includes(o['Order Status'])).length;
+            document.getElementById('deliveredOrders').textContent =
+                orders.filter(o => o['Order Status'] === 'Delivered').length;
+
+            const totalSpend = orders.reduce((sum, o) => sum + o['Total Amount'], 0);
+            document.getElementById('totalSpend').textContent = formatIndianCurrency(totalSpend);
+
+            // High Value Orders (> 10 Lakhs)
+            const highValueCount = orders.filter(o => o['Total Amount'] > 1000000).length;
+            const highValueEl = document.getElementById('highValueOrders');
+            if (highValueEl) highValueEl.textContent = highValueCount;
         }
 
         function renderTable(orders) {
             ordersTableBody.innerHTML = '';
             orders.forEach(order => {
                 const tr = document.createElement('tr');
+
+                // Check for overdue: Only for Delivered orders where Due Date < Now
+                const dueDate = new Date(order['Payment Due Date']);
+                const isOverdue = order['Order Status'] === 'Delivered' && dueDate < new Date();
+                if (isOverdue) {
+                    tr.classList.add('row-overdue');
+                }
+
                 tr.innerHTML = `
-                    <td><a href="#" class="order-link" onclick="openOrderDetails('${order['Order No']}')">${order['Order No']}</a></td>
-                    <td>${order['Order Date']}</td>
-                    <td>${order['Item']}</td>
-                    <td><span class="status-badge status-${order['Order Status'].toLowerCase()}">${order['Order Status']}</span></td>
-                    <td>₹${order['Total Amount'].toLocaleString()}</td>
-                    <td>${order['Expected Delivery']}</td>
-                    <td>
-                        <button class="action-btn" title="Track Order" onclick="openTracking('${order['Order No']}')"><i class="fas fa-map-marker-alt"></i></button>
-                        <button class="action-btn" title="Download Invoice" onclick="downloadInvoice('${order['Order No']}')"><i class="fas fa-file-download"></i></button>
-                        ${order['Order Status'] !== 'Cancelled' && order['Order Status'] !== 'Delivered' ?
+                        <td><a href="#" class="order-link" onclick="openOrderDetails('${order['Order No']}')">${order['Order No']}</a></td>
+                        <td>${order['Order Date']}</td>
+                        <td>${order['Item']}</td>
+                        <td><span class="status-badge status-${order['Order Status'].toLowerCase()}">${order['Order Status']}</span></td>
+                        <td>${formatIndianCurrency(order['Total Amount'])}</td>
+                        <td>${order['Expected Delivery']}</td>
+                        <td>
+                            <button class="action-btn" title="Track Order" onclick="openTracking('${order['Order No']}')"><i class="fas fa-map-marker-alt"></i></button>
+                            <button class="action-btn" title="Download Invoice" onclick="downloadInvoice('${order['Order No']}')"><i class="fas fa-file-download"></i></button>
+                            ${order['Order Status'] !== 'Cancelled' && order['Order Status'] !== 'Delivered' ?
                         `<button class="action-btn" title="Cancel Order" onclick="openCancel('${order['Order No']}')"><i class="fas fa-times-circle"></i></button>` : ''}
-                    </td>
-                `;
+                        </td>
+                    `;
                 ordersTableBody.appendChild(tr);
             });
+        }
+
+        // --- CHARTS & EXPORT ---
+        function getGradient(ctx, colorStart, colorEnd) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colorStart);
+            gradient.addColorStop(1, colorEnd);
+            return gradient;
+        }
+
+        function renderCharts(orders) {
+            // Helper to destroy old charts
+            ['statusChart', 'consumptionChart', 'revenueChart', 'trendChart', 'agingChart', 'topProductsChart'].forEach(id => {
+                if (charts[id]) {
+                    charts[id].destroy();
+                }
+            });
+
+            // 1. Status Chart
+            const statusCounts = {};
+            orders.forEach(o => statusCounts[o['Order Status']] = (statusCounts[o['Order Status']] || 0) + 1);
+
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            charts['statusChart'] = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: [
+                            '#1e3a8a', '#1d4ed8', '#3b82f6', '#60a5fa', '#93c5fd' // Darker shades of blue
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const status = Object.keys(statusCounts)[index];
+                            const filter = document.getElementById('statusFilter');
+                            if (filter) {
+                                filter.value = status;
+                                filter.dispatchEvent(new Event('change'));
+                            }
+                        }
+                    },
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // 2. Consumption by Product Type (Order Type)
+            const typeCounts = {};
+            orders.forEach(o => typeCounts[o['Order Type']] = (typeCounts[o['Order Type']] || 0) + o['Total Amount']);
+
+            const consumptionCtx = document.getElementById('consumptionChart').getContext('2d');
+            charts['consumptionChart'] = new Chart(consumptionCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(typeCounts),
+                    datasets: [{
+                        label: 'Total Amount',
+                        data: Object.values(typeCounts),
+                        backgroundColor: getGradient(consumptionCtx, '#003073', '#059cf7'),
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // 3. Revenue vs Advance
+            const totalRev = orders.reduce((sum, o) => sum + o['Total Amount'], 0);
+            const totalAdv = orders.reduce((sum, o) => sum + (o['Advance Amount'] || 0), 0);
+            const totalOut = totalRev - totalAdv;
+
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            charts['revenueChart'] = new Chart(revenueCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Revenue', 'Advance Received', 'Outstanding'],
+                    datasets: [{
+                        label: 'Amount',
+                        data: [totalRev, totalAdv, totalOut],
+                        backgroundColor: [
+                            getGradient(revenueCtx, '#1e3a8a', '#3b82f6'),
+                            getGradient(revenueCtx, '#059669', '#34d399'),
+                            getGradient(revenueCtx, '#b91c1c', '#f87171')
+                        ],
+                        borderRadius: 5
+                    }]
+                },
+                options: { plugins: { legend: { display: false } } }
+            });
+
+            // 4. Order Volume Trend (Monthly)
+            const monthlyCounts = {};
+            orders.forEach(o => {
+                const date = new Date(o['Order Date']);
+                const key = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+                monthlyCounts[key] = (monthlyCounts[key] || 0) + 1;
+            });
+            // Sort months chronologically (simplified for now)
+            const sortedMonths = Object.keys(monthlyCounts).sort((a, b) => new Date('01 ' + a) - new Date('01 ' + b));
+
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            charts['trendChart'] = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [{
+                        label: 'Orders',
+                        data: sortedMonths.map(m => monthlyCounts[m]),
+                        borderColor: '#059cf7',
+                        backgroundColor: 'rgba(5, 156, 247, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                }
+            });
+
+            // 5. Aging Balance (Overdue Buckets)
+            const now = new Date();
+            const buckets = { '0-30 Days': 0, '31-60 Days': 0, '61-90 Days': 0, '90+ Days': 0 };
+
+            orders.forEach(o => {
+                const balance = o['Total Amount'] - (o['Advance Amount'] || 0);
+                if (balance > 0 && o['Order Status'] === 'Delivered') {
+                    const dueDate = new Date(o['Payment Due Date']);
+                    if (dueDate < now) {
+                        const diffTime = Math.abs(now - dueDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays <= 30) buckets['0-30 Days'] += balance;
+                        else if (diffDays <= 60) buckets['31-60 Days'] += balance;
+                        else if (diffDays <= 90) buckets['61-90 Days'] += balance;
+                        else buckets['90+ Days'] += balance;
+                    }
+                }
+            });
+
+            const agingCtx = document.getElementById('agingChart').getContext('2d');
+            charts['agingChart'] = new Chart(agingCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(buckets),
+                    datasets: [{
+                        label: 'Overdue Amount',
+                        data: Object.values(buckets),
+                        backgroundColor: getGradient(agingCtx, '#ef4444', '#fca5a5'),
+                        borderRadius: 5
+                    }]
+                },
+                options: { plugins: { legend: { display: false } } }
+            });
+
+            // 6. Top 5 Products
+            const productSales = {};
+            orders.forEach(o => productSales[o['Item']] = (productSales[o['Item']] || 0) + o['Total Amount']);
+            const topProducts = Object.entries(productSales)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            const topCtx = document.getElementById('topProductsChart').getContext('2d');
+            charts['topProductsChart'] = new Chart(topCtx, {
+                type: 'bar',
+                indexAxis: 'y',
+                data: {
+                    labels: topProducts.map(p => p[0]),
+                    datasets: [{
+                        label: 'Sales',
+                        data: topProducts.map(p => p[1]),
+                        backgroundColor: getGradient(topCtx, '#8b5cf6', '#c4b5fd'),
+                        borderRadius: 5
+                    }]
+                },
+                options: { plugins: { legend: { display: false } } }
+            });
+        }
+
+        window.exportData = function (format) {
+            let content = '';
+            // Get current filtered orders from the table or re-filter
+            // Ideally we should store 'currentFilteredOrders' globally, but for now we can just use allOrders 
+            // and re-apply filters or just export all. Let's export ALL for simplicity or re-implement filter logic.
+            // For better UX, let's use the filtered list.
+            // Since we don't have 'filtered' accessible here easily without global, let's just export allOrders for now.
+            const orders = allOrders;
+
+            if (format === 'csv') {
+                const headers = ['Order No', 'Date', 'Item', 'Status', 'Amount', 'Advance', 'Balance'];
+                content = headers.join(',') + '\n';
+                orders.forEach(o => {
+                    const balance = o['Total Amount'] - (o['Advance Amount'] || 0);
+                    content += `${o['Order No']},${o['Order Date']},${o['Item']},${o['Order Status']},${o['Total Amount']},${o['Advance Amount']},${balance}\n`;
+                });
+                const blob = new Blob([content], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'orders.csv';
+                a.click();
+            } else if (format === 'pdf') {
+                window.print();
+            } else {
+                alert('Export to ' + format.toUpperCase() + ' is coming soon!');
+            }
         }
 
         // --- MODAL LOGIC ---
@@ -179,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p><strong>Order No:</strong> ${order['Order No']}</p>
                             <p><strong>Date:</strong> ${order['Order Date']}</p>
                             <p><strong>Status:</strong> ${order['Order Status']}</p>
-                            <p><strong>Amount:</strong> ₹${order['Total Amount'].toLocaleString()}</p>
+                            <p><strong>Amount:</strong> ${formatIndianCurrency(order['Total Amount'])}</p>
                         </div>
                         <div>
                             <p><strong>Buyer:</strong> ${order['Buyer Name']}</p>
@@ -190,7 +432,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
                         <p><strong>Item:</strong> ${order['Item']}</p>
                         <p><strong>Quantity:</strong> ${order['Quantity']}</p>
-                        <p><strong>Unit Cost:</strong> ₹${order['Unit Cost']}</p>
+                        <p><strong>Unit Cost:</strong> ${formatIndianCurrency(order['Unit Cost'])}</p>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                        <p><strong>Advance Paid:</strong> ${formatIndianCurrency(order['Advance Amount'] || 0)}</p>
+                        <p><strong>Balance Due:</strong> ${formatIndianCurrency(order['Total Amount'] - (order['Advance Amount'] || 0))}</p>
+                        <p><strong>Payment Due Date:</strong> ${order['Payment Due Date'] || 'N/A'}</p>
                     </div>
                 `;
                 orderModal.style.display = 'flex';

@@ -6,8 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import os
-from utils import get_all_orders, get_order_by_id, cancel_order, generate_invoice_docx
+from utils import get_all_orders, get_order_by_id, cancel_order, generate_invoice_pdf, load_config
 from ai_agent import DataAgent
+from datetime import datetime
 
 app = FastAPI()
 
@@ -27,7 +28,7 @@ app.add_middleware(
 )
 
 # Initialize AI Agent
-DATA_PATH = os.path.join('data', 'order_db.xlsx')
+DATA_PATH = os.path.join('data', 'order_db_v2.xlsx')
 ai_agent = DataAgent(DATA_PATH)
 
 # Pydantic models for request bodies
@@ -126,11 +127,83 @@ async def cancel_order_endpoint(order_id: str, request: Request):
 
 @app.get("/api/invoice/{order_id}")
 async def download_invoice(order_id: str):
-    file_path = generate_invoice_docx(order_id)
+    file_path = generate_invoice_pdf(order_id)
     if file_path and os.path.exists(file_path):
-        filename = f"invoice_{order_id}.docx"
-        return FileResponse(path=file_path, filename=filename, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        filename = f"invoice_{order_id}.pdf"
+        return FileResponse(path=file_path, filename=filename, media_type='application/pdf')
     raise HTTPException(status_code=404, detail="Invoice generation failed")
+
+@app.get("/api/dashboard-stats")
+async def get_dashboard_stats():
+    orders = get_all_orders()
+    
+    # Aggregations
+    total_orders = len(orders)
+    status_counts = {}
+    total_revenue = 0
+    total_advance = 0
+    outstanding_balance = 0
+    transit_times = []
+    overdue_count = 0
+    
+    config = load_config()
+    payment_due_days = config.get("payment_due_days", 60)
+    
+    for order in orders:
+        # Status Counts
+        status = order['Order Status']
+        status_counts[status] = status_counts.get(status, 0) + 1
+        
+        # Financials
+        amount = order.get('Total Amount', 0)
+        advance = order.get('Advance Amount', 0)
+        total_revenue += amount
+        total_advance += advance
+        
+        balance = amount - advance
+        if balance > 0:
+            outstanding_balance += balance
+            
+            # Overdue Check
+            due_date_str = order.get('Payment Due Date')
+            if due_date_str:
+                try:
+                    due_date = datetime.strptime(due_date_str, "%Y-%m-%d")
+                    if due_date < datetime.now():
+                        overdue_count += 1
+                except:
+                    pass
+
+        # Transit Time (Delivered - Shipped)
+        if status == 'Delivered':
+            shipped_str = order.get('Shipped Date')
+            delivered_str = order.get('Delivered Date')
+            if shipped_str and delivered_str:
+                try:
+                    shipped = datetime.strptime(shipped_str, "%Y-%m-%d %H:%M")
+                    delivered = datetime.strptime(delivered_str, "%Y-%m-%d %H:%M")
+                    days = (delivered - shipped).days
+                    transit_times.append(days)
+                except:
+                    pass
+                    
+    avg_transit_time = sum(transit_times) / len(transit_times) if transit_times else 0
+    
+    return {
+        "total_orders": total_orders,
+        "status_counts": status_counts,
+        "financials": {
+            "revenue": total_revenue,
+            "advance": total_advance,
+            "outstanding": outstanding_balance
+        },
+        "avg_transit_time": round(avg_transit_time, 1),
+        "overdue_count": overdue_count
+    }
+
+@app.get("/api/config")
+async def get_config():
+    return load_config()
 
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):

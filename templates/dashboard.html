@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="dashboard-body">
@@ -19,8 +20,7 @@
                 <h2>UFlex Portal</h2>
             </div>
             <nav class="nav-links">
-                <a href="#" class="active"><i class="fas fa-box"></i> Orders</a>
-                <a href="#"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="#" class="active"><i class="fas fa-box"></i> Dashboard</a>
                 <a href="#"><i class="fas fa-file-invoice"></i> Invoices</a>
                 <a href="#"><i class="fas fa-cog"></i> Settings</a>
             </nav>
@@ -37,6 +37,14 @@
             <header class="top-bar">
                 <h1>Order Dashboard</h1>
                 <div class="actions">
+                    <div class="export-actions">
+                        <button class="btn-secondary" onclick="exportData('csv')"><i class="fas fa-file-csv"></i>
+                            CSV</button>
+                        <button class="btn-secondary" onclick="exportData('excel')"><i class="fas fa-file-excel"></i>
+                            Excel</button>
+                        <button class="btn-secondary" onclick="exportData('pdf')"><i class="fas fa-file-pdf"></i>
+                            PDF</button>
+                    </div>
                     <button class="btn-secondary" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
                     <button class="btn-secondary" id="getHelpBtn"><i class="fas fa-headset"></i> Get Help</button>
                     <button class="btn-secondary" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -76,6 +84,57 @@
                         <h3>Total Spend</h3>
                         <p id="totalSpend">?0</p>
                     </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box orange"><i class="fas fa-star"></i></div>
+                    <div class="stat-info">
+                        <h3>High Value Orders</h3>
+                        <p id="highValueOrders">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <!-- Row 1 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Order Status Distribution</h3>
+                    </div>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Consumption by Product Type</h3>
+                    </div>
+                    <canvas id="consumptionChart"></canvas>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Revenue vs Advance</h3>
+                    </div>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Order Volume Trend</h3>
+                    </div>
+                    <canvas id="trendChart"></canvas>
+                </div>
+
+                <!-- Row 3 -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Aging Balance (Overdue)</h3>
+                    </div>
+                    <canvas id="agingChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Top 5 Products</h3>
+                    </div>
+                    <canvas id="topProductsChart"></canvas>
                 </div>
             </div>
 
@@ -183,7 +242,8 @@
             <h2>Get Help</h2>
             <div class="help-options">
                 <p>Need assistance? Our AI assistant is here to help you with your orders.</p>
-                <button class="btn-primary" id="startChatFromHelp"><i class="fas fa-comments"></i> Start Live Chat</button>
+                <button class="btn-primary" id="startChatFromHelp"><i class="fas fa-comments"></i> Start Live
+                    Chat</button>
             </div>
         </div>
     </div>

@@ -49,6 +49,9 @@ def generate_orders(num_orders=50):
         status = random.choice(ORDER_STATUSES)
         
         # Logic for status and dates
+        shipped_date = None
+        delivered_date = None
+        
         if status == 'Ordered':
             delivery_days = random.randint(5, 15)
             expected_delivery = order_date + timedelta(days=delivery_days)
@@ -58,15 +61,28 @@ def generate_orders(num_orders=50):
         elif status == 'Shipped':
             delivery_days = random.randint(2, 8)
             expected_delivery = order_date + timedelta(days=delivery_days)
+            shipped_date = order_date + timedelta(days=random.randint(1, 3))
         else: # Delivered
             delivery_days = random.randint(2, 10)
             expected_delivery = order_date + timedelta(days=delivery_days)
-            if expected_delivery > datetime.now():
-                expected_delivery = datetime.now() - timedelta(days=random.randint(0, 5))
+            shipped_date = order_date + timedelta(days=random.randint(1, 3))
+            delivered_date = shipped_date + timedelta(days=random.randint(2, 5))
+            # Ensure delivered date is not in future
+            if delivered_date > datetime.now():
+                delivered_date = datetime.now() - timedelta(days=random.randint(0, 2))
+            if shipped_date > delivered_date:
+                shipped_date = delivered_date - timedelta(days=random.randint(1, 3))
 
         quantity = random.randint(10, 500) * 10
         unit_cost = random.randint(100, 5000)
         total_cost = quantity * unit_cost
+        
+        # Advance Payment (10-30%)
+        advance_percentage = random.randint(10, 30) / 100
+        advance_amount = round(total_cost * advance_percentage, 2)
+        
+        # Payment Due Date (60 days from Order Date)
+        payment_due_date = order_date + timedelta(days=60)
         
         order = {
             "Order No": f"ORD-{10000+i}",
@@ -77,7 +93,11 @@ def generate_orders(num_orders=50):
             "Quantity": quantity,
             "Unit Cost": unit_cost,
             "Total Amount": total_cost,
+            "Advance Amount": advance_amount,
             "Expected Delivery": expected_delivery.strftime("%Y-%m-%d %H:%M"),
+            "Shipped Date": shipped_date.strftime("%Y-%m-%d %H:%M") if shipped_date else None,
+            "Delivered Date": delivered_date.strftime("%Y-%m-%d %H:%M") if delivered_date else None,
+            "Payment Due Date": payment_due_date.strftime("%Y-%m-%d"),
             "Buyer Name": buyer["name"],
             "Buyer Address": buyer["address"],
             "Buyer GST": buyer["gst"],
@@ -89,8 +109,8 @@ def generate_orders(num_orders=50):
     
     df = pd.DataFrame(orders)
     os.makedirs('data', exist_ok=True)
-    df.to_excel('data/order_db.xlsx', index=False)
-    print("Generated data/order_db.xlsx")
+    df.to_excel('data/order_db_v2.xlsx', index=False)
+    print("Generated data/order_db_v2.xlsx")
 
 def create_invoice_template():
     doc = Document()

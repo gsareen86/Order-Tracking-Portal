@@ -1,31 +1,28 @@
 :root {
-    --primary-color: #2563eb;
-    --primary-dark: #1d4ed8;
-    --secondary-color: #64748b;
-    --background-color: #f1f5f9;
+    --primary-color: #003073;
+    --primary-dark: #002050;
+    --secondary-color: #059cf7;
+    --background-color: #f3f4f6;
     --surface-color: #ffffff;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
     --success-color: #10b981;
     --warning-color: #f59e0b;
     --danger-color: #ef4444;
-    --border-color: #e2e8f0;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
 }
 
 body.dark-mode {
     --background-color: #0f172a;
     --surface-color: #1e293b;
-    --text-primary: #f1f5f9;
+    --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --border-color: #334155;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
 }
 
 /* Notification Banner */
@@ -639,58 +636,16 @@ body {
     background-color: var(--primary-dark);
 }
 
-/* Chat Widget Container */
-.chat-widget {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    z-index: 2000;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.chat-toggle-btn {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    box-shadow: var(--shadow-lg);
-    transition: transform 0.2s, background-color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chat-toggle-btn:hover {
-    transform: scale(1.05);
-    background-color: var(--primary-dark);
-}
-
 /* Chat Window - UPDATED DIMENSIONS */
 .chat-window {
     position: fixed;
-    /* Changed to fixed to be relative to viewport */
     bottom: 90px;
-    /* Space above the bottom edge */
     right: 2rem;
-
-    /* The requested dimensions */
     width: 33vw;
-    /* 1/3 of the UI page horizontally */
     height: 75vh;
-    /* 3/4 of the UI page vertically */
-
-    /* Constraints to keep it realistic/usable */
     min-width: 350px;
     min-height: 400px;
     max-width: 600px;
-    /* Prevent it from becoming huge on ultrawide monitors */
-
     background-color: var(--surface-color);
     box-shadow: var(--shadow-lg);
     z-index: 2001;
@@ -722,7 +677,6 @@ body {
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
-    /* Prevent header from shrinking */
 }
 
 .chat-header h3 {
@@ -804,27 +758,9 @@ body {
 .chat-input-area input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
-.chat-input-area button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    width: 45px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chat-input-area button:hover {
-    background-color: var(--primary-dark);
-}
-
-/* Dark mode adjustments */
+/* Dark Mode Overrides for Chat */
 body.dark-mode .chat-window {
     background-color: var(--surface-color);
     border-left-color: var(--border-color);
@@ -849,4 +785,50 @@ body.dark-mode .chat-input-area input {
     background-color: #0f172a;
     color: var(--text-primary);
     border-color: var(--border-color);
+}
+
+/* Charts Section */
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart-card {
+    background: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    height: 400px;
+    position: relative;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.chart-header h3 {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+/* Export Buttons */
+.export-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Overdue Highlight */
+.row-overdue {
+    background-color: #fef2f2 !important;
+    border-left: 4px solid var(--danger-color);
+}
+
+.row-overdue:hover {
+    background-color: #fee2e2 !important;
 }
