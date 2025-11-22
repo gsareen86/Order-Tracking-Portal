@@ -831,4 +831,288 @@ body.dark-mode .chat-input-area input {
 
 .row-overdue:hover {
     background-color: #fee2e2 !important;
+}/* ========== Phase 3 Enhancements ========== */
+
+/* Thinking Trace Expandable UI */
+.thinking-trace {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background-color: rgba(59, 130, 246, 0.05);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.thinking-trace summary {
+    cursor: pointer;
+    color: #3b82f6;
+    font-weight: 500;
+    padding: 0.5rem;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.thinking-trace summary:hover {
+    color: #60a5fa;
+}
+
+.thinking-trace summary i {
+    font-size: 1rem;
+}
+
+.thinking-content {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: #475569;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+body.dark-mode .thinking-trace {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+body.dark-mode .thinking-trace summary {
+    color: #60a5fa;
+}
+
+body.dark-mode .thinking-content {
+    background-color: #0f172a;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+/* Enhanced Send Button */
+#sendMessageBtn {
+    background: linear-gradient(135deg, var(--primary-color), #059cf7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 48, 115, 0.3);
+    flex-shrink: 0;
+}
+
+#sendMessageBtn:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 4px 12px rgba(0, 48, 115, 0.5);
+}
+
+#sendMessageBtn:active {
+    transform: scale(0.95);
+}
+
+#sendMessageBtn i {
+    font-size: 18px;
+}
+
+body.dark-mode #sendMessageBtn {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+body.dark-mode #sendMessageBtn:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+}
+
+/* Enhanced Dark Mode Colors */
+body.dark-mode {
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --border-color: #475569;
+    --link-color: #60a5fa;
+}
+
+/* Dark Mode - Order Links */
+body.dark-mode .order-link {
+    color: #60a5fa !important;
+    font-weight: 500;
+}
+
+body.dark-mode .order-link:hover {
+    color: #93c5fd !important;
+    text-decoration: underline;
+}
+
+/* Dark Mode - Status Badges */
+body.dark-mode .status-ordered {
+    background-color: #1e40af;
+    color: #bfdbfe;
+    border: 1px solid #3b82f6;
+}
+
+body.dark-mode .status-packaging {
+    background-color: #c2410c;
+    color: #fed7aa;
+    border: 1px solid #f97316;
+}
+
+body.dark-mode .status-shipped {
+    background-color: #7c2d12;
+    color: #fecdd3;
+    border: 1px solid #dc2626;
+}
+
+body.dark-mode .status-delivered {
+    background-color: #166534;
+    color: #bbf7d0;
+    border: 1px solid #22c55e;
+}
+
+body.dark-mode .status-cancelled {
+    background-color: #991b1b;
+    color: #fecaca;
+    border: 1px solid #ef4444;
+}
+
+/* Dark Mode - Header Icons */
+body.dark-mode .header-actions button {
+    color: #e2e8f0;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .header-actions button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #f1f5f9;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Dark Mode - Table */
+body.dark-mode th {
+    background-color: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-mode td {
+    color: #e2e8f0;
+    border-color: #3f4f66;
+}
+
+body.dark-mode tbody tr:hover {
+    background-color: #334155;
+}
+
+body.dark-mode tbody tr.row-overdue {
+    background-color: rgba(239, 68, 68, 0.15);
+    border-left: 4px solid #ef4444;
+}
+
+/* Dark Mode - Action Buttons */
+body.dark-mode .action-btn {
+    color: #cbd5e1;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .action-btn:hover {
+    color: #f1f5f9;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Dark Mode - Stat Cards */
+body.dark-mode .stat-value {
+    color: #f1f5f9;
+}
+
+body.dark-mode .stat-label {
+    color: #cbd5e1;
+}
+/* ========== Additional Dark Mode Fixes ========== */
+
+/* Dark Mode - Logo Text */
+body.dark-mode .logo h2 {
+    color: #60a5fa !important;
+    font-weight: 600;
+}
+
+/* Dark Mode - Header Action Icons */
+body.dark-mode .header-actions button {
+    color: #cbd5e1 !important;
+    background-color: rgba(203, 213, 225, 0.1) !important;
+    border: 1px solid rgba(203, 213, 225, 0.2) !important;
+}
+
+body.dark-mode .header-actions button:hover {
+    background-color: rgba(203, 213, 225, 0.2) !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(203, 213, 225, 0.3) !important;
+    transform: translateY(-1px);
+}
+
+/* Dark Mode - Overdue Row Fix */
+body.dark-mode tbody tr.row-overdue {
+    background-color: rgba(220, 38, 38, 0.2) !important;
+    border-left: 4px solid #ef4444;
+}
+
+body.dark-mode tbody tr.row-overdue td {
+    color: #fecaca !important;
+}
+
+body.dark-mode tbody tr.row-overdue:hover {
+    background-color: rgba(220, 38, 38, 0.3) !important;
+}
+
+body.dark-mode tbody tr.row-overdue .order-link {
+    color: #fca5a5 !important;
+    font-weight: 600;
+}
+
+/* Chat Message Markdown Table Support */
+.message-text table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+}
+
+.message-text table th {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+}
+
+.message-text table td {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.message-text table tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+body.dark-mode .message-text table th {
+    background-color: #1e40af;
+    color: #bfdbfe;
+}
+
+body.dark-mode .message-text table td {
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+body.dark-mode .message-text table tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
 }

@@ -1,14 +1,19 @@
 from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import os
 from utils import get_all_orders, get_order_by_id, cancel_order, generate_invoice_pdf, load_config
-from ai_agent import DataAgent
+from ai_agent_v2 import DataAgent
 from datetime import datetime
+import ast
+import re as regex
 
 app = FastAPI()
 
@@ -208,6 +213,7 @@ async def get_config():
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
     try:
+        # Process the query with AI agent (v2 handles greetings/off-topic and markdown formatting)
         result = ai_agent.process_query(request.query)
         return result
     except Exception as e:

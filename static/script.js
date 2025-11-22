@@ -599,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chatInput.value = '';
 
             // Show thinking indicator
-            const thinkingId = addMessage('Thinking...', 'ai', true);
+            const thinkingId = addMessage('Analyzing your question...', 'ai', true);
 
             try {
                 const response = await fetch('/api/chat', {
@@ -612,8 +612,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Remove thinking indicator
                 removeMessage(thinkingId);
 
-                // Add AI response
-                addMessage(data.response, 'ai');
+                // Add AI response with thinking trace if available
+                addMessage(data.response, 'ai', false, data.thinking);
 
                 // Handle any actions (like highlighting orders)
                 if (data.action === 'highlight_order' && data.order_id) {
@@ -626,15 +626,45 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function addMessage(text, sender, isThinking = false) {
+        function addMessage(text, sender, isThinking = false, thinkingTrace = null) {
             const div = document.createElement('div');
             div.classList.add('message', `${sender}-message`);
-            div.textContent = text;
+
             if (isThinking) {
                 div.id = `msg-${Date.now()}`;
                 div.style.fontStyle = 'italic';
                 div.style.opacity = '0.7';
+                div.textContent = text;
+            } else {
+                // Create message content
+                const messageText = document.createElement('div');
+                messageText.className = 'message-text';
+                // Render markdown for AI messages, plain text for user messages
+                if (sender === 'ai' && typeof marked !== 'undefined') {
+                    messageText.innerHTML = marked.parse(text);
+                } else {
+                    messageText.textContent = text;
+                }
+                div.appendChild(messageText);
+
+                // Add thinking trace if available (only for AI messages)
+                if (sender === 'ai' && thinkingTrace) {
+                    const thinkingContainer = document.createElement('details');
+                    thinkingContainer.className = 'thinking-trace';
+
+                    const summary = document.createElement('summary');
+                    summary.innerHTML = '<i class="fas fa-brain"></i> View AI Thinking Process';
+                    thinkingContainer.appendChild(summary);
+
+                    const thinkingContent = document.createElement('pre');
+                    thinkingContent.className = 'thinking-content';
+                    thinkingContent.textContent = thinkingTrace;
+                    thinkingContainer.appendChild(thinkingContent);
+
+                    div.appendChild(thinkingContainer);
+                }
             }
+
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             return div.id;
