@@ -1,10 +1,10 @@
-import google.generativeai as genai
-import pandas as pd
-import os
-import json
 import re
-import traceback
+import json
+import pandas as pd
+import google.generativeai as genai
 from dotenv import load_dotenv
+import os
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -14,16 +14,42 @@ API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=API_KEY)
 
 class BaseAgent:
-    def __init__(self, model_name='gemini-2.0-flash'):
+    def __init__(self, model_name='gemini-3-pro-preview'):
         self.model = genai.GenerativeModel(model_name)
 
     def generate_json(self, prompt):
         try:
             response = self.model.generate_content(prompt)
             text_response = response.text.strip()
-            # Sanitize JSON
-            text_response = re.sub(r"```json\n?|```", "", text_response).strip()
-            return json.loads(text_response)
+            
+            # Special case: If the response is ONLY a Python code block (for ExecutorAgent)
+            if text_response.startswith('```python') and 'python_code' not in text_response:
+                # Extract the code from the markdown block
+                code_match = re.search(r'```python\n(.+?)\n```', text_response, re.DOTALL)
+                if code_match:
+                    code = code_match.group(1)
+                    return {"python_code": code}
+            
+            # Robust JSON extraction
+            # Look for the first '{' and the last '}'
+            match = re.search(r"\{.*\}", text_response, re.DOTALL)
+            if match:
+                json_str = match.group(0)
+                return json.loads(json_str)
+            else:
+                # Fallback: try cleaning markdown
+                cleaned = re.sub(r"```json\n?|```", "", text_response).strip()
+                if cleaned.startswith('{'):
+                    return json.loads(cleaned)
+                    
+                # Last resort: If it's plain text (likely from ValidatorAgent), wrap it
+                # This happens when the model returns a direct answer instead of JSON
+                return {
+                    "final_response": text_response,
+                    "action": None,
+                    "order_id": None
+                }
+                
         except Exception as e:
             print(f"JSON Generation Error: {e}")
             print(f"Raw Response: {response.text if 'response' in locals() else 'None'}")
@@ -50,9 +76,12 @@ class PlannerAgent(BaseAgent):
 
     def plan(self, user_query, chat_history):
         history_text = "\n".join([f"{role}: {text}" for role, text in chat_history[-3:]])
+        current_date = datetime.now().strftime('%Y-%m-%d')
         
         prompt = f"""
         You are the PLANNER agent for an Order Tracking System.
+        
+        CURRENT DATE: {current_date}
         
         DATA SCHEMA:
         {self.data_summary}
@@ -72,8 +101,9 @@ class PlannerAgent(BaseAgent):
         
         2. **PLANNING (for `data_query`)**:
            - Break down complex queries into logical steps.
+           - **CRITICAL**: When filtering by category/product type, extract the EXACT name from the user query. For example: 'Chemical' -> 'Chemicals', 'Holography' -> 'Holography'. Cross-reference with the allowed values in DATA SCHEMA.
            - **CRITICAL**: If the user asks for a list/details, the final step MUST be to retrieve the data, not just count it.
-           - **CRITICAL**: If the user asks for "overdue" orders, you MUST check `Order Status == 'Delivered'` AND `Payment Due Date < Today`.
+           - **CRITICAL**: If the user asks for "overdue" orders OR "due date passed" OR "payment pending", you MUST check `Order Status == 'Delivered'` AND `Payment Due Date < Today`.
            - **DERIVED METRICS**: "Balance" = 'Total Amount' - 'Advance Amount'. If user asks for balance, include a step to calculate it.
         
         OUTPUT JSON FORMAT:
@@ -102,9 +132,13 @@ class ExecutorAgent(BaseAgent):
         context_summary = ""
         for k, v in context.items():
             context_summary += f"Step {k} Result Type: {type(v)}\n"
+        
+        current_date = datetime.now().strftime('%Y-%m-%d')
 
         prompt = f"""
         You are the EXECUTOR agent. Write Python code to execute a single step of a data analysis plan.
+        
+        CURRENT DATE: {current_date} (Use pd.Timestamp('{current_date}') for date comparisons)
         
         DATAFRAME VARIABLE: `df`
         DATAFRAME COLUMNS: {list(self.df.columns)}
@@ -120,13 +154,14 @@ class ExecutorAgent(BaseAgent):
         2. Store the result in a variable named `result`.
         3. Use `pd.to_datetime` for date comparisons.
         4. Handle case sensitivity (e.g., `str.lower()`).
-        5. **CRITICAL**: For "overdue" logic: `df[(df['Order Status'] == 'Delivered') & (pd.to_datetime(df['Payment Due Date']) < pd.Timestamp.now())]`
+        5. **CRITICAL**: For "overdue" / "due date passed" logic: Use the CURRENT DATE provided above, NOT pd.Timestamp.now(). Example: `df[(df['Order Status'] == 'Delivered') & (pd.to_datetime(df['Payment Due Date']) < pd.Timestamp('{current_date}'))]`
         6. **MAPPINGS**: "Category"->"Order Type", "Product"->"Item", "Unit Price"->"Unit Cost".
         7. **CALCULATIONS**: "Balance" = 'Total Amount' - 'Advance Amount'.
         8. **CONTEXT USAGE**: 
            - **INCORRECT**: `result = df[df['Col'] == 'Val']` (This ignores previous filters!)
            - **CORRECT**: `prev_df = context[1]; result = prev_df[prev_df['Col'] == 'Val']` (Always use the output of the previous step if it was a dataframe)
         9. **WARNING**: `df` is the ENTIRE dataset. Only use `df` if the step explicitly says "all orders" or "from the database". For "filtered orders", ALWAYS use `context`.
+        10. **PANDAS BEST PRACTICE**: Always use `.copy()` when filtering DataFrames to avoid SettingWithCopyWarning. Use `.loc[]` for column assignments. Example: `result = df[df['Col'] == 'Val'].copy()` then `result.loc[:, 'NewCol'] = ...`
         
         OUTPUT JSON:
         {{

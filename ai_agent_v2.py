@@ -37,7 +37,7 @@ class DataAgent:
         return pd.DataFrame()
 
     def setup_model(self):
-        return genai.GenerativeModel('gemini-2.0-flash')
+        return genai.GenerativeModel('gemini-2.5-flash')
 
     def _get_data_summary(self):
         """
