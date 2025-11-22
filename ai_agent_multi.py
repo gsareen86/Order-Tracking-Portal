@@ -276,11 +276,14 @@ class MultiAgentOrchestrator:
             return df
         return pd.DataFrame()
 
-    def process_query(self, user_query):
+    def process_query(self, user_query, progress_callback=None):
         if self.df.empty:
             self.df = self.load_data()
 
         # 1. PLAN
+        if progress_callback:
+            progress_callback({"stage": "planning", "message": "Analyzing your question..."})
+        
         plan_result = self.planner.plan(user_query, self.chat_history)
         
         if not plan_result:
@@ -295,8 +298,17 @@ class MultiAgentOrchestrator:
         # 2. EXECUTE
         context = {}
         execution_log = []
+        total_steps = len(plan_result.get('plan', []))
         
-        for step in plan_result.get('plan', []):
+        for idx, step in enumerate(plan_result.get('plan', []), 1):
+            if progress_callback:
+                progress_callback({
+                    "stage": "executing", 
+                    "message": f"Executing Step {idx} of {total_steps}...",
+                    "step": idx,
+                    "total_steps": total_steps
+                })
+            
             result, error = self.executor.execute_step(step, context)
             if error:
                 print(f"Step {step['step_id']} failed: {error}")
@@ -305,6 +317,9 @@ class MultiAgentOrchestrator:
             execution_log.append(f"Step {step['step_id']}: Success")
 
         # 3. VALIDATE & SYNTHESIZE
+        if progress_callback:
+            progress_callback({"stage": "validating", "message": "Generating final answer..."})
+        
         final_result = self.validator.validate(user_query, plan_result['plan'], context)
         
         if not final_result:

@@ -702,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Chat message sending functionality
+        // Chat message sending functionality with live progress
         async function sendChatMessage() {
             const query = chatInput.value.trim();
             if (!query) return;
@@ -711,8 +711,9 @@ document.addEventListener('DOMContentLoaded', () => {
             addMessage(query, 'user');
             chatInput.value = '';
 
-            // Show thinking indicator
-            const thinkingId = addMessage('Analyzing your question...', 'ai', true);
+            // Add progress message with live status
+            const progressId = addMessage('🔍 Analyzing your question...', 'ai', true);
+            const progressDiv = document.getElementById(progressId);
 
             try {
                 const response = await fetch('/api/chat', {
@@ -720,20 +721,53 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query })
                 });
-                const data = await response.json();
 
-                // Remove thinking indicator
-                removeMessage(thinkingId);
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
 
-                // Add AI response with thinking trace if available
-                addMessage(data.response, 'ai', false, data.thinking);
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
 
-                // Handle any actions (like highlighting orders)
-                if (data.action === 'highlight_order' && data.order_id) {
-                    highlightOrder(data.order_id);
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop(); // Keep incomplete line in buffer
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const jsonData = JSON.parse(line.slice(6));
+
+                            if (jsonData.type === 'progress') {
+                                // Update progress message with icons and step info
+                                let icon = '';
+                                if (jsonData.stage === 'planning') icon = '🔍';
+                                else if (jsonData.stage === 'executing') icon = '⚙️';
+                                else if (jsonData.stage === 'validating') icon = '✓';
+
+                                progressDiv.textContent = `${icon} ${jsonData.message}`;
+                            }
+                            else if (jsonData.type === 'complete') {
+                                // Remove progress indicator
+                                removeMessage(progressId);
+
+                                // Add final response with thinking trace
+                                addMessage(jsonData.response, 'ai', false, jsonData.thinking);
+
+                                // Handle any actions
+                                if (jsonData.action === 'highlight_order' && jsonData.order_id) {
+                                    highlightOrder(jsonData.order_id);
+                                }
+                            }
+                            else if (jsonData.type === 'error') {
+                                removeMessage(progressId);
+                                addMessage("Sorry, I encountered an error. Please try again.", 'ai');
+                            }
+                        }
+                    }
                 }
             } catch (error) {
-                removeMessage(thinkingId);
+                removeMessage(progressId);
                 addMessage("Sorry, I encountered an error. Please try again.", 'ai');
                 console.error('Chat Error:', error);
             }
