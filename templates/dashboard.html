@@ -52,6 +52,53 @@
                 </div>
             </header>
 
+            <div class="filters-section"
+                style="margin-bottom: 20px; background: var(--card-bg); padding: 15px; border-radius: 10px; box-shadow: var(--card-shadow);">
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <select id="dateFilter">
+                        <option value="all">All Time</option>
+                        <option value="15">Last 15 Days</option>
+                        <option value="60">Last 60 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="180">Last 6 Months</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Order Type</label>
+                    <select id="typeFilter">
+                        <option value="all">All Types</option>
+                        <option value="Packaging Films">Packaging Films</option>
+                        <option value="Aseptic Liquid Packaging">Aseptic Liquid Packaging</option>
+                        <option value="Chemicals">Chemicals</option>
+                        <option value="Holography">Holography</option>
+                        <option value="Engineering Machinery">Engineering Machinery</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="statusFilter">
+                        <option value="all">All Statuses</option>
+                        <option value="Ordered">Ordered</option>
+                        <option value="Packaging">Packaging</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort By</label>
+                    <select id="sortFilter">
+                        <option value="date_desc">Date (Newest)</option>
+                        <option value="date_asc">Date (Oldest)</option>
+                        <option value="amount_desc">Amount (High to Low)</option>
+                        <option value="amount_asc">Amount (Low to High)</option>
+                        <option value="orderno_asc">Order No (Asc)</option>
+                        <option value="orderno_desc">Order No (Desc)</option>
+                    </select>
+                </div>
+            </div>
+
             <div id="notificationBanner" class="notification-banner" style="display: none;">
                 <span id="notificationMessage"></span>
                 <button class="close-banner">&times;</button>
@@ -136,52 +183,6 @@
                         <h3>Top 5 Products</h3>
                     </div>
                     <canvas id="topProductsChart"></canvas>
-                </div>
-            </div>
-
-            <div class="filters-section">
-                <div class="filter-group">
-                    <label>Date Range</label>
-                    <select id="dateFilter">
-                        <option value="all">All Time</option>
-                        <option value="15">Last 15 Days</option>
-                        <option value="60">Last 60 Days</option>
-                        <option value="90">Last 90 Days</option>
-                        <option value="180">Last 6 Months</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Order Type</label>
-                    <select id="typeFilter">
-                        <option value="all">All Types</option>
-                        <option value="Packaging Films">Packaging Films</option>
-                        <option value="Aseptic Liquid Packaging">Aseptic Liquid Packaging</option>
-                        <option value="Chemicals">Chemicals</option>
-                        <option value="Holography">Holography</option>
-                        <option value="Engineering Machinery">Engineering Machinery</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Status</label>
-                    <select id="statusFilter">
-                        <option value="all">All Statuses</option>
-                        <option value="Ordered">Ordered</option>
-                        <option value="Packaging">Packaging</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Sort By</label>
-                    <select id="sortFilter">
-                        <option value="date_desc">Date (Newest)</option>
-                        <option value="date_asc">Date (Oldest)</option>
-                        <option value="amount_desc">Amount (High to Low)</option>
-                        <option value="amount_asc">Amount (Low to High)</option>
-                        <option value="orderno_asc">Order No (Asc)</option>
-                        <option value="orderno_desc">Order No (Desc)</option>
-                    </select>
                 </div>
             </div>
 

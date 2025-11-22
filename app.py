@@ -10,7 +10,7 @@ from pydantic import BaseModel
 import uvicorn
 import os
 from utils import get_all_orders, get_order_by_id, cancel_order, generate_invoice_pdf, load_config
-from ai_agent_v2 import DataAgent
+from ai_agent_multi import MultiAgentOrchestrator
 from datetime import datetime
 import ast
 import re as regex
@@ -34,7 +34,7 @@ app.add_middleware(
 
 # Initialize AI Agent
 DATA_PATH = os.path.join('data', 'order_db_v2.xlsx')
-ai_agent = DataAgent(DATA_PATH)
+ai_agent = MultiAgentOrchestrator(DATA_PATH)
 
 # Pydantic models for request bodies
 class LoginRequest(BaseModel):

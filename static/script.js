@@ -38,12 +38,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- HELPERS ---
     function formatIndianCurrency(amount) {
-        const x = amount.toString();
-        const lastThree = x.substring(x.length - 3);
+        if (amount === undefined || amount === null) return '₹0';
+        const x = Math.round(amount).toString();
+        let lastThree = x.substring(x.length - 3);
         const otherNumbers = x.substring(0, x.length - 3);
         if (otherNumbers !== '')
-            return '₹' + otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
-        return '₹' + lastThree;
+            lastThree = ',' + lastThree;
+        const res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+        return '₹' + res;
+    }
+
+    function formatCompactNumber(number) {
+        if (number >= 10000000) {
+            return (number / 10000000).toFixed(2) + ' Cr';
+        } else if (number >= 100000) {
+            return (number / 100000).toFixed(2) + ' L';
+        } else if (number >= 1000) {
+            return (number / 1000).toFixed(2) + ' K';
+        }
+        return number.toString();
     }
 
     // --- DASHBOARD LOGIC ---
@@ -208,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     datasets: [{
                         data: Object.values(statusCounts),
                         backgroundColor: [
-                            '#1e3a8a', '#1d4ed8', '#3b82f6', '#60a5fa', '#93c5fd' // Darker shades of blue
+                            '#1e3a8a', '#1d4ed8', '#3b82f6', '#60a5fa', '#93c5fd'
                         ],
                         borderWidth: 0
                     }]
@@ -229,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // 2. Consumption by Product Type (Order Type)
+            // 2. Consumption by Product Type
             const typeCounts = {};
             orders.forEach(o => typeCounts[o['Order Type']] = (typeCounts[o['Order Type']] || 0) + o['Total Amount']);
 
@@ -246,33 +259,92 @@ document.addEventListener('DOMContentLoaded', () => {
                     }]
                 },
                 options: {
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => formatIndianCurrency(context.raw)
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: (value) => formatCompactNumber(value) }
+                        }
+                    }
                 }
             });
 
-            // 3. Revenue vs Advance
-            const totalRev = orders.reduce((sum, o) => sum + o['Total Amount'], 0);
-            const totalAdv = orders.reduce((sum, o) => sum + (o['Advance Amount'] || 0), 0);
-            const totalOut = totalRev - totalAdv;
+            // 3. Revenue vs Advance (Buckets by Order Age)
+            const now = new Date();
+            const revBuckets = { '0-30 Days': { balance: 0, advance: 0 }, '31-60 Days': { balance: 0, advance: 0 }, '61-90 Days': { balance: 0, advance: 0 }, '90+ Days': { balance: 0, advance: 0 } };
+
+            orders.forEach(o => {
+                const orderDate = new Date(o['Order Date']);
+                const diffTime = Math.abs(now - orderDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const balance = o['Total Amount'] - (o['Advance Amount'] || 0);
+                const advance = o['Advance Amount'] || 0;
+
+                if (diffDays <= 30) { revBuckets['0-30 Days'].balance += balance; revBuckets['0-30 Days'].advance += advance; }
+                else if (diffDays <= 60) { revBuckets['31-60 Days'].balance += balance; revBuckets['31-60 Days'].advance += advance; }
+                else if (diffDays <= 90) { revBuckets['61-90 Days'].balance += balance; revBuckets['61-90 Days'].advance += advance; }
+                else { revBuckets['90+ Days'].balance += balance; revBuckets['90+ Days'].advance += advance; }
+            });
 
             const revenueCtx = document.getElementById('revenueChart').getContext('2d');
             charts['revenueChart'] = new Chart(revenueCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Total Revenue', 'Advance Received', 'Outstanding'],
-                    datasets: [{
-                        label: 'Amount',
-                        data: [totalRev, totalAdv, totalOut],
-                        backgroundColor: [
-                            getGradient(revenueCtx, '#1e3a8a', '#3b82f6'),
-                            getGradient(revenueCtx, '#059669', '#34d399'),
-                            getGradient(revenueCtx, '#b91c1c', '#f87171')
-                        ],
-                        borderRadius: 5
-                    }]
+                    labels: Object.keys(revBuckets),
+                    datasets: [
+                        {
+                            label: 'Balance Due',
+                            data: Object.values(revBuckets).map(b => b.balance),
+                            backgroundColor: '#ef4444',
+                            borderRadius: 5
+                        },
+                        {
+                            label: 'Advance Paid',
+                            data: Object.values(revBuckets).map(b => b.advance),
+                            backgroundColor: '#22c55e',
+                            borderRadius: 5
+                        }
+                    ]
                 },
-                options: { plugins: { legend: { display: false } } }
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true },
+                        y: {
+                            stacked: true,
+                            ticks: { callback: (value) => formatCompactNumber(value) }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => context.dataset.label + ': ' + formatIndianCurrency(context.raw)
+                            }
+                        }
+                    },
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = Object.keys(revBuckets)[index];
+                            // Simple filter logic: Set date filter to approximate range
+                            const dateFilter = document.getElementById('dateFilter');
+                            if (dateFilter) {
+                                if (label === '0-30 Days') dateFilter.value = '30'; // Closest approximation
+                                else if (label === '31-60 Days') dateFilter.value = '60';
+                                else if (label === '61-90 Days') dateFilter.value = '90';
+                                else dateFilter.value = '180'; // 90+
+                                dateFilter.dispatchEvent(new Event('change'));
+                            }
+                        }
+                    }
+                }
             });
 
             // 4. Order Volume Trend (Monthly)
@@ -282,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const key = date.toLocaleString('default', { month: 'short', year: '2-digit' });
                 monthlyCounts[key] = (monthlyCounts[key] || 0) + 1;
             });
-            // Sort months chronologically (simplified for now)
             const sortedMonths = Object.keys(monthlyCounts).sort((a, b) => new Date('01 ' + a) - new Date('01 ' + b));
 
             const trendCtx = document.getElementById('trendChart').getContext('2d');
@@ -298,12 +369,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         fill: true,
                         tension: 0.4
                     }]
+                },
+                options: {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => 'Order Count: ' + context.raw
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
                 }
             });
 
-            // 5. Aging Balance (Overdue Buckets)
-            const now = new Date();
-            const buckets = { '0-30 Days': 0, '31-60 Days': 0, '61-90 Days': 0, '90+ Days': 0 };
+            // 5. Aging Balance (Overdue) - Count based
+            const agingBuckets = { '0-30 Days': { count: 0, amount: 0 }, '31-60 Days': { count: 0, amount: 0 }, '61-90 Days': { count: 0, amount: 0 }, '90+ Days': { count: 0, amount: 0 } };
 
             orders.forEach(o => {
                 const balance = o['Total Amount'] - (o['Advance Amount'] || 0);
@@ -313,10 +395,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         const diffTime = Math.abs(now - dueDate);
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                        if (diffDays <= 30) buckets['0-30 Days'] += balance;
-                        else if (diffDays <= 60) buckets['31-60 Days'] += balance;
-                        else if (diffDays <= 90) buckets['61-90 Days'] += balance;
-                        else buckets['90+ Days'] += balance;
+                        if (diffDays <= 30) { agingBuckets['0-30 Days'].count++; agingBuckets['0-30 Days'].amount += balance; }
+                        else if (diffDays <= 60) { agingBuckets['31-60 Days'].count++; agingBuckets['31-60 Days'].amount += balance; }
+                        else if (diffDays <= 90) { agingBuckets['61-90 Days'].count++; agingBuckets['61-90 Days'].amount += balance; }
+                        else { agingBuckets['90+ Days'].count++; agingBuckets['90+ Days'].amount += balance; }
                     }
                 }
             });
@@ -325,15 +407,32 @@ document.addEventListener('DOMContentLoaded', () => {
             charts['agingChart'] = new Chart(agingCtx, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(buckets),
+                    labels: Object.keys(agingBuckets),
                     datasets: [{
-                        label: 'Overdue Amount',
-                        data: Object.values(buckets),
+                        label: 'Overdue Orders',
+                        data: Object.values(agingBuckets).map(b => b.count),
                         backgroundColor: getGradient(agingCtx, '#ef4444', '#fca5a5'),
                         borderRadius: 5
                     }]
                 },
-                options: { plugins: { legend: { display: false } } }
+                options: {
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const index = context.dataIndex;
+                                    const key = Object.keys(agingBuckets)[index];
+                                    const data = agingBuckets[key];
+                                    return [`Orders: ${data.count}`, `Total Amount: ${formatIndianCurrency(data.amount)}`];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Number of Orders' } }
+                    }
+                }
             });
 
             // 6. Top 5 Products
@@ -356,7 +455,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         borderRadius: 5
                     }]
                 },
-                options: { plugins: { legend: { display: false } } }
+                options: {
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => formatIndianCurrency(context.raw)
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { callback: (value) => formatCompactNumber(value) }
+                        }
+                    }
+                }
             });
         }
 
