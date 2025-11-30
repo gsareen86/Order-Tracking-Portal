@@ -15,21 +15,36 @@ DATA_DIR = 'data'
 ORDER_DB_PATH = os.path.join(DATA_DIR, 'order_db_v2.xlsx')
 INVOICE_TEMPLATE_PATH = os.path.join(DATA_DIR, 'invoice_template.docx')
 
-def get_all_orders():
+def get_orders_df():
     if not os.path.exists(ORDER_DB_PATH):
-        return []
+        return pd.DataFrame()
+    
     df = pd.read_excel(ORDER_DB_PATH)
+    # Ensure consistency in column names (strip whitespace)
+    df.columns = [c.strip() for c in df.columns]
+    
     # Convert dates to string for JSON serialization
-    df['Order Date'] = df['Order Date'].astype(str)
-    df['Order Date'] = df['Order Date'].astype(str)
-    df['Expected Delivery'] = df['Expected Delivery'].astype(str)
-    # Handle new date columns, filling NaNs with empty string or None
+    if 'Order Date' in df.columns:
+        df['Order Date'] = pd.to_datetime(df['Order Date'])
+    if 'Expected Delivery' in df.columns:
+        df['Expected Delivery'] = pd.to_datetime(df['Expected Delivery'])
     if 'Shipped Date' in df.columns:
-        df['Shipped Date'] = df['Shipped Date'].astype(str).replace('nan', None)
+         df['Shipped Date'] = pd.to_datetime(df['Shipped Date'])
     if 'Delivered Date' in df.columns:
-        df['Delivered Date'] = df['Delivered Date'].astype(str).replace('nan', None)
+         df['Delivered Date'] = pd.to_datetime(df['Delivered Date'])
     if 'Payment Due Date' in df.columns:
-        df['Payment Due Date'] = df['Payment Due Date'].astype(str).replace('nan', None)
+         df['Payment Due Date'] = pd.to_datetime(df['Payment Due Date'])
+         
+    return df
+
+def get_all_orders():
+    df = get_orders_df()
+    if df.empty:
+        return []
+        
+    # Convert timestamps to strings for JSON serialization
+    for col in df.select_dtypes(include=['datetime64']).columns:
+        df[col] = df[col].astype(str).replace('NaT', None)
         
     return df.to_dict('records')
 

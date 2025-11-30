@@ -5,6 +5,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+from utils import get_orders_df
 
 # Load environment variables
 load_dotenv()
@@ -263,22 +264,15 @@ class ValidatorAgent(BaseAgent):
 class MultiAgentOrchestrator:
     def __init__(self, data_path):
         self.data_path = data_path
-        self.df = self.load_data()
+        self.df = get_orders_df()
         self.planner = PlannerAgent(self.df)
         self.executor = ExecutorAgent(self.df)
         self.validator = ValidatorAgent()
         self.chat_history = []
 
-    def load_data(self):
-        if os.path.exists(self.data_path):
-            df = pd.read_excel(self.data_path)
-            df.columns = [c.strip() for c in df.columns]
-            return df
-        return pd.DataFrame()
-
     def process_query(self, user_query, progress_callback=None):
         if self.df.empty:
-            self.df = self.load_data()
+            self.df = get_orders_df()
 
         # 1. PLAN
         if progress_callback:
