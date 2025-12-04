@@ -11,7 +11,6 @@ from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
 
 DATA_DIR = 'data'
-DATA_DIR = 'data'
 ORDER_DB_PATH = os.path.join(DATA_DIR, 'order_db_v2.xlsx')
 INVOICE_TEMPLATE_PATH = os.path.join(DATA_DIR, 'invoice_template.docx')
 

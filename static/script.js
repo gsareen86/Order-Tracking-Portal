@@ -37,27 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- HELPERS ---
-    function formatIndianCurrency(amount) {
-        if (amount === undefined || amount === null) return '₹0';
-        const x = Math.round(amount).toString();
-        let lastThree = x.substring(x.length - 3);
-        const otherNumbers = x.substring(0, x.length - 3);
-        if (otherNumbers !== '')
-            lastThree = ',' + lastThree;
-        const res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
-        return '₹' + res;
-    }
+    // formatIndianCurrency and formatCompactNumber are loaded from utils.js
 
-    function formatCompactNumber(number) {
-        if (number >= 10000000) {
-            return (number / 10000000).toFixed(2) + ' Cr';
-        } else if (number >= 100000) {
-            return (number / 100000).toFixed(2) + ' L';
-        } else if (number >= 1000) {
-            return (number / 1000).toFixed(2) + ' K';
-        }
-        return number.toString();
-    }
 
     // --- DASHBOARD LOGIC ---
     const ordersTableBody = document.getElementById('ordersTableBody');

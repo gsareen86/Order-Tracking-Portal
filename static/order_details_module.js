@@ -1,13 +1,5 @@
-// Helper function for formatting Indian currency
-function formatIndianCurrency(amount) {
-    if (amount === undefined || amount === null) return '₹0';
-    const x = Math.round(amount).toString();
-    let lastThree = x.substring(x.length - 3);
-    const otherNumbers = x.substring(0, x.length - 3);
-    if (otherNumbers !== '') lastThree = ',' + lastThree;
-    const res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
-    return '₹' + res;
-}
+// Helper function formatIndianCurrency is loaded from utils.js
+
 
 // Order Details Page - Enhanced loadOrderDetails function
 window.loadOrderDetails = async function (orderId) {
