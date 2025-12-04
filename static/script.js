@@ -37,27 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- HELPERS ---
-    function formatIndianCurrency(amount) {
-        if (amount === undefined || amount === null) return '₹0';
-        const x = Math.round(amount).toString();
-        let lastThree = x.substring(x.length - 3);
-        const otherNumbers = x.substring(0, x.length - 3);
-        if (otherNumbers !== '')
-            lastThree = ',' + lastThree;
-        const res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
-        return '₹' + res;
-    }
+    // formatIndianCurrency and formatCompactNumber are loaded from utils.js
 
-    function formatCompactNumber(number) {
-        if (number >= 10000000) {
-            return (number / 10000000).toFixed(2) + ' Cr';
-        } else if (number >= 100000) {
-            return (number / 100000).toFixed(2) + ' L';
-        } else if (number >= 1000) {
-            return (number / 1000).toFixed(2) + ' K';
-        }
-        return number.toString();
-    }
 
     // --- DASHBOARD LOGIC ---
     const ordersTableBody = document.getElementById('ordersTableBody');
@@ -168,20 +149,37 @@ document.addEventListener('DOMContentLoaded', () => {
             orders.forEach(order => {
                 const tr = document.createElement('tr');
 
-                // Check for overdue: Only for Delivered orders where Due Date < Now
+                // Payment Status Logic
+                const total = order['Total Amount'] || 0;
+                const advance = order['Advance Amount'] || 0;
+                const balance = total - advance;
                 const dueDate = new Date(order['Payment Due Date']);
-                const isOverdue = order['Order Status'] === 'Delivered' && dueDate < new Date();
-                if (isOverdue) {
-                    tr.classList.add('row-overdue');
+                // Overdue if Delivered AND Due Date passed AND Balance > 0
+                const isPaymentOverdue = order['Order Status'] === 'Delivered' && dueDate < new Date() && balance > 0;
+
+                let paymentBadge = '';
+                if (balance <= 0) {
+                    paymentBadge = '<span class="badge-payment badge-paid">PAID</span>';
+                } else if (isPaymentOverdue) {
+                    paymentBadge = '<span class="badge-payment badge-overdue">OVERDUE</span>';
+                } else {
+                    paymentBadge = '<span class="badge-payment badge-pending">PENDING</span>';
                 }
 
+                // Delivery Delay Logic
+                const expectedDate = new Date(order['Expected Delivery']);
+                const isDeliveryLate = order['Order Status'] !== 'Delivered' && expectedDate < new Date();
+                const deliveryHtml = isDeliveryLate ?
+                    `${order['Expected Delivery']} <i class="fas fa-exclamation-circle text-danger" title="Delayed"></i>` :
+                    order['Expected Delivery'];
+
                 tr.innerHTML = `
-                        <td><a href="#" class="order-link" onclick="openOrderDetails('${order['Order No']}')">${order['Order No']}</a></td>
+                        <td><a href="/order_details.html?id=${order['Order No']}" class="order-link">${order['Order No']}</a></td>
                         <td>${order['Order Date']}</td>
                         <td>${order['Item']}</td>
-                        <td><span class="status-badge status-${order['Order Status'].toLowerCase()}">${order['Order Status']}</span></td>
-                        <td>${formatIndianCurrency(order['Total Amount'])}</td>
-                        <td>${order['Expected Delivery']}</td>
+                        <td><span class="status-badge status-${order['Order Status'].toLowerCase().replace(/\s+/g, '-')}">${order['Order Status']}</span></td>
+                        <td>${formatIndianCurrency(total)} ${paymentBadge}</td>
+                        <td>${deliveryHtml}</td>
                         <td>
                             <button class="action-btn" title="Track Order" onclick="openTracking('${order['Order No']}')"><i class="fas fa-map-marker-alt"></i></button>
                             <button class="action-btn" title="Download Invoice" onclick="downloadInvoice('${order['Order No']}')"><i class="fas fa-file-download"></i></button>

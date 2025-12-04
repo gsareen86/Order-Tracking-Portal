@@ -11,7 +11,6 @@ from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
 
 DATA_DIR = 'data'
-DATA_DIR = 'data'
 ORDER_DB_PATH = os.path.join(DATA_DIR, 'order_db_v2.xlsx')
 INVOICE_TEMPLATE_PATH = os.path.join(DATA_DIR, 'invoice_template.docx')
 
@@ -34,8 +33,51 @@ def get_orders_df():
          df['Delivered Date'] = pd.to_datetime(df['Delivered Date'])
     if 'Payment Due Date' in df.columns:
          df['Payment Due Date'] = pd.to_datetime(df['Payment Due Date'])
+    if 'Expected Dispatch Date' in df.columns:
+         df['Expected Dispatch Date'] = pd.to_datetime(df['Expected Dispatch Date'])
          
     return df
+
+def get_production_timeline(status):
+    stages = [
+        "PO Received", 
+        "Film Extrusion", 
+        "Printing", 
+        "Lamination", 
+        "Slitting", 
+        "QC", 
+        "Dispatch", 
+        "Delivered"
+    ]
+    
+    # Map status to index in stages
+    status_map = {
+        'Ordered': 0,
+        'In Production': 1, # Generic start
+        'Film Extrusion': 1,
+        'Printing': 2,
+        'Lamination': 3,
+        'Slitting': 4,
+        'QC': 5,
+        'Ready for Dispatch': 6,
+        'Shipped': 6, # Past dispatch
+        'Delivered': 7,
+        'Cancelled': -1
+    }
+    
+    current_index = status_map.get(status, 0)
+    if status == 'Shipped':
+        current_index = 6 # Mark Dispatch as done
+        
+    timeline = []
+    for i, stage in enumerate(stages):
+        timeline.append({
+            "stage": stage,
+            "completed": i <= current_index if current_index != -1 else False,
+            "current": i == current_index if current_index != -1 else False
+        })
+        
+    return timeline
 
 def get_all_orders():
     df = get_orders_df()
@@ -45,6 +87,9 @@ def get_all_orders():
     # Convert timestamps to strings for JSON serialization
     for col in df.select_dtypes(include=['datetime64']).columns:
         df[col] = df[col].astype(str).replace('NaT', None)
+        
+    # Fill NaN with empty string or 0
+    df = df.fillna('')
         
     return df.to_dict('records')
 

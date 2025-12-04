@@ -831,7 +831,9 @@ body.dark-mode .chat-input-area input {
 
 .row-overdue:hover {
     background-color: #fee2e2 !important;
-}/* ========== Phase 3 Enhancements ========== */
+}
+
+/* ========== Phase 3 Enhancements ========== */
 
 /* Thinking Trace Expandable UI */
 .thinking-trace {
@@ -1035,6 +1037,7 @@ body.dark-mode .stat-value {
 body.dark-mode .stat-label {
     color: #cbd5e1;
 }
+
 /* ========== Additional Dark Mode Fixes ========== */
 
 /* Dark Mode - Logo Text */
@@ -1116,3 +1119,502 @@ body.dark-mode .message-text table td {
 body.dark-mode .message-text table tr:nth-child(even) {
     background-color: rgba(255, 255, 255, 0.02);
 }
+
+/* Dark Mode Support */
+[data-theme='dark'] .order-link,
+[data-theme='dark'] a {
+    color: #60a5fa !important;
+}
+
+[data-theme='dark'] a:hover {
+    color: #93c5fd !important;
+}
+
+/* Improved Chat Window */
+.chat-window {
+    width: 500px !important;
+    height: 75vh !important;
+    max-height: 800px !important;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    padding: 1.25rem !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.chat-header h4 {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+.chat-header button {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: none !important;
+    border: none !important;
+    color: white !important;
+    font-size: 1.2rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s !important;
+}
+
+.chat-header button:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.chat-messages {
+    padding: 1.5rem !important;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
+}
+
+.message {
+    padding: 0.9rem 1.1rem !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    animation: slideIn 0.2s ease !important;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-message {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3) !important;
+}
+
+/* Order Details Page Styles */
+.details-container {
+    max-width: 1400px;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.card h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Timeline Styles */
+.timeline-card {
+    margin-bottom: 2rem;
+}
+
+.timeline-wrapper {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.progress-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: var(--border-color);
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.timeline-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    text-align: center;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--card-bg);
+    border: 3px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+}
+
+.step.completed .step-circle {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+}
+
+.step.current .step-circle {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.1);
+    }
+}
+
+.step-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.step.current .step-label {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.step.completed .step-label {
+    color: var(--text-primary);
+}
+
+/* Details Grid */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.details-grid-2 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row .label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-row .value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Finance Card */
+.finance-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.finance-item {
+    text-align: center;
+    padding: 1.25rem;
+    background-color: var(--background-color);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s;
+}
+
+.finance-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.finance-item .label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    display: block;
+    font-weight: 500;
+}
+
+.finance-item .amount {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.finance-item .amount.success {
+    color: var(--success-color);
+}
+
+.finance-item .amount.danger {
+    color: var(--danger-color);
+}
+
+.actions-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Premium Button Styling */
+.btn-outline {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-outline:hover {
+    background-color: var(--background-color);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-outline i {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .btn-outline {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-outline:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--primary-color);
+}
+
+/* Shipment Card */
+.shipment-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-block .label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.info-block .value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Documents Card */
+.doc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.doc-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    transition: background-color 0.2s;
+}
+
+.doc-list li:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.doc-list li i {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    color: var(--primary-color);
+}
+
+.doc-list li span {
+    flex: 1;
+    font-weight: 500;
+}
+
+.doc-list .badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.doc-list .badge.success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.download-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.download-link:hover {
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb i {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Top Bar for Order Details */
+.top-bar .actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .details-grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .finance-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .shipment-info {
+        grid-template-columns: 1fr;
+    }
+
+    .timeline-steps {
+        flex-wrap: wrap;
+    }
+}.status-po-received { background: #e0f2fe; color: #0284c7; }
+.status-film-extrusion { background: #fef9c3; color: #ca8a04; }
+.status-printing { background: #fef3c7; color: #d97706; }
+.status-lamination { background: #ffedd5; color: #ea580c; }
+.status-slitting { background: #ffe4e6; color: #e11d48; }
+.status-qc { background: #f3e8ff; color: #9333ea; }
+.status-dispatch { background: #e0e7ff; color: #4f46e5; }
+/* Payment Status Badges */
+.badge-payment {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.badge-paid {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.badge-overdue {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.badge-pending {
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+}
+
+.text-danger { color: #dc2626; }
