@@ -168,20 +168,37 @@ document.addEventListener('DOMContentLoaded', () => {
             orders.forEach(order => {
                 const tr = document.createElement('tr');
 
-                // Check for overdue: Only for Delivered orders where Due Date < Now
+                // Payment Status Logic
+                const total = order['Total Amount'] || 0;
+                const advance = order['Advance Amount'] || 0;
+                const balance = total - advance;
                 const dueDate = new Date(order['Payment Due Date']);
-                const isOverdue = order['Order Status'] === 'Delivered' && dueDate < new Date();
-                if (isOverdue) {
-                    tr.classList.add('row-overdue');
+                // Overdue if Delivered AND Due Date passed AND Balance > 0
+                const isPaymentOverdue = order['Order Status'] === 'Delivered' && dueDate < new Date() && balance > 0;
+
+                let paymentBadge = '';
+                if (balance <= 0) {
+                    paymentBadge = '<span class="badge-payment badge-paid">PAID</span>';
+                } else if (isPaymentOverdue) {
+                    paymentBadge = '<span class="badge-payment badge-overdue">OVERDUE</span>';
+                } else {
+                    paymentBadge = '<span class="badge-payment badge-pending">PENDING</span>';
                 }
 
+                // Delivery Delay Logic
+                const expectedDate = new Date(order['Expected Delivery']);
+                const isDeliveryLate = order['Order Status'] !== 'Delivered' && expectedDate < new Date();
+                const deliveryHtml = isDeliveryLate ?
+                    `${order['Expected Delivery']} <i class="fas fa-exclamation-circle text-danger" title="Delayed"></i>` :
+                    order['Expected Delivery'];
+
                 tr.innerHTML = `
-                        <td><a href="#" class="order-link" onclick="openOrderDetails('${order['Order No']}')">${order['Order No']}</a></td>
+                        <td><a href="/order_details.html?id=${order['Order No']}" class="order-link">${order['Order No']}</a></td>
                         <td>${order['Order Date']}</td>
                         <td>${order['Item']}</td>
-                        <td><span class="status-badge status-${order['Order Status'].toLowerCase()}">${order['Order Status']}</span></td>
-                        <td>${formatIndianCurrency(order['Total Amount'])}</td>
-                        <td>${order['Expected Delivery']}</td>
+                        <td><span class="status-badge status-${order['Order Status'].toLowerCase().replace(/\s+/g, '-')}">${order['Order Status']}</span></td>
+                        <td>${formatIndianCurrency(total)} ${paymentBadge}</td>
+                        <td>${deliveryHtml}</td>
                         <td>
                             <button class="action-btn" title="Track Order" onclick="openTracking('${order['Order No']}')"><i class="fas fa-map-marker-alt"></i></button>
                             <button class="action-btn" title="Download Invoice" onclick="downloadInvoice('${order['Order No']}')"><i class="fas fa-file-download"></i></button>

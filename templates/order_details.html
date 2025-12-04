@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - UFlex Portal</title>
+    <link rel="stylesheet" href="/static/style.css?v=8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="dashboard-body">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>UFlex Portal</h2>
+            </div>
+            <nav class="nav-links">
+                <a href="/dashboard"><i class="fas fa-box"></i> Dashboard</a>
+                <a href="#" class="active"><i class="fas fa-file-alt"></i> Order Details</a>
+                <a href="#"><i class="fas fa-file-invoice"></i> Invoices</a>
+                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">JD</div>
+                <div class="info">
+                    <h4>John Doe</h4>
+                    <p>XYZ Industries</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="breadcrumb">
+                    <a href="/dashboard">Dashboard</a> <i class="fas fa-chevron-right"></i> <span
+                        id="orderIdHeader">Order #...</span>
+                </div>
+                <div class="actions">
+                    <button class="btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+                    <button class="btn-primary" id="reorderBtn"><i class="fas fa-sync"></i> Reorder</button>
+                </div>
+            </header>
+
+            <div class="details-container">
+                <!-- Status & Timeline -->
+                <div class="card timeline-card">
+                    <div class="card-header">
+                        <h3>Production Journey</h3>
+                        <span id="currentStatusBadge" class="status-badge">Loading...</span>
+                    </div>
+                    <div class="timeline-wrapper">
+                        <div class="progress-track"></div>
+                        <div id="productionTimeline" class="timeline-steps">
+                            <!-- Steps injected via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-grid">
+                    <!-- Order Info -->
+                    <div class="card info-card">
+                        <h3>Order Information</h3>
+                        <div class="info-row">
+                            <span class="label">Order Date:</span>
+                            <span class="value" id="orderDate">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Customer Ref:</span>
+                            <span class="value" id="customerRef">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Product Type:</span>
+                            <span class="value" id="productType">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label" id="deliveryDateLabel">Expected Delivery:</span>
+                            <span class="value" id="deliveryDateValue">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Specs -->
+                    <div class="card specs-card">
+                        <h3>Material Specifications</h3>
+                        <div class="info-row">
+                            <span class="label">Structure:</span>
+                            <span class="value" id="materialStructure">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Thickness:</span>
+                            <span class="value" id="materialThickness">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Width:</span>
+                            <span class="value" id="materialWidth">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Quantity:</span>
+                            <span class="value" id="orderQuantity">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Financials -->
+                    <div class="card finance-card">
+                        <h3>Financials</h3>
+                        <div class="finance-summary">
+                            <div class="finance-item">
+                                <span class="label">Total Value</span>
+                                <span class="amount" id="totalValue">₹0</span>
+                            </div>
+                            <div class="finance-item">
+                                <span class="label">Advance Paid</span>
+                                <span class="amount success" id="advancePaid">₹0</span>
+                            </div>
+                            <div class="finance-item">
+                                <span class="label">Balance Due</span>
+                                <span class="amount danger" id="balanceDue">₹0</span>
+                            </div>
+                            <div class="finance-item">
+                                <span class="label">Credit Days</span>
+                                <span class="amount" id="creditDays">-</span>
+                            </div>
+                            <div class="finance-item">
+                                <span class="label">Payment Due Date</span>
+                                <span class="amount" id="paymentDueDate">-</span>
+                            </div>
+                        </div>
+                        <div class="actions-row">
+                            <button class="btn-outline" id="downloadInvoiceBtn"><i class="fas fa-download"></i>
+                                Invoice</button>
+                            <button class="btn-outline" id="downloadEwayBtn"><i class="fas fa-file-alt"></i> E-Way
+                                Bill</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipment & Documents -->
+                <div class="details-grid-2">
+                    <div class="card shipment-card">
+                        <h3>Shipment Tracking</h3>
+                        <div class="shipment-info">
+                            <div class="info-block">
+                                <span class="label">Carrier</span>
+                                <span class="value" id="carrierName">-</span>
+                            </div>
+                            <div class="info-block">
+                                <span class="label">AWB Number</span>
+                                <span class="value" id="awbNumber">-</span>
+                            </div>
+                            <div class="info-block">
+                                <span class="label">Status</span>
+                                <span class="value" id="shipmentStatus">-</span>
+                            </div>
+                        </div>
+                        <div id="trackingLinkContainer" style="margin-top: 15px;">
+                            <!-- Link injected via JS -->
+                        </div>
+                    </div>
+
+                    <div class="card docs-card">
+                        <h3>Document Vault</h3>
+                        <ul class="doc-list">
+                            <li>
+                                <i class="fas fa-file-pdf"></i>
+                                <span>Artwork_Final_v3.pdf</span>
+                                <span class="badge success">Approved</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-certificate"></i>
+                                <span>QC_Certificate.pdf</span>
+                                <a href="#" class="download-link">Download</a>
+                            </li>
+                            <li>
+                                <i class="fas fa-flask"></i>
+                                <span>Lab_Test_Report.pdf</span>
+                                <a href="#" class="download-link">Download</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/script.js?v=8"></script>
+    <script src="/static/order_details_module.js?v=8"></script>
+    <script>
+        // Simple inline script to load details
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('id');
+            if (orderId) {
+                loadOrderDetails(orderId);
+            } else {
+                alert('No Order ID provided');
+                window.location.href = '/dashboard';
+            }
+        });
+    </script>
+</body>
+
+</html>
